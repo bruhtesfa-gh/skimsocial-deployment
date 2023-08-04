@@ -1,0 +1,9 @@
+node_modules
+dist
+# Keep environment variables out of version control
+.env
+# /helper/FileManagment/temp
+/.vscode
+/test-results/
+/playwright-report/
+/playwright/.cache/

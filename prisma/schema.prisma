@@ -1,0 +1,370 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       String                @id @unique @default(cuid())
+  sub                      String?               @unique @default(uuid())
+  name                     String
+  lastname                 String
+  email                    String                @unique
+  email_verified           Boolean               @default(false)
+  password                 String?
+  picture                  String
+  tags                     String[]
+  permissions              String[]
+  subscribed               Boolean               @default(false)
+  subscription_expired     Boolean               @default(false)
+  stripe_customer_id       String                @unique
+  checkout_session_id      String?
+  number_of_socials        String
+  number_of_insta_members  Int                   @default(0)
+  number_of_tiktok_members Int                   @default(0)
+  provider                 Provider              @default(LOCAL)
+  instagrams               Instagram[]
+  posts                    Post[]
+  stories                  Story[]
+  reels                    Reel[]
+  videos                   Video[]
+  tikToks                  TikTok[]
+  userInstaMembers         UserInstaMember[]
+  userTikTokMembers        UserTikTokMember[]
+  personalAccessTokens     PersonalAccessToken[]
+  resetPasswordTokens      ResetPasswordToken?
+  pricing                  Pricing               @relation(fields: [pricingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  pricingId                String
+  Collection               Collection[]
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @default(now()) @updatedAt
+}
+
+model Instagram {
+  id                 String   @id @unique @default(cuid())
+  pk                 String   @unique
+  full_name          String
+  username           String   @unique
+  password           String
+  browser            Json     @default("{}")
+  cookies            Json
+  cookie             String   @unique
+  profile_pic_url    String
+  biography          String?
+  followers          Int
+  following          Int
+  posts_count        Int      @default(0)
+  reels_count        Int      @default(0)
+  stories_count      Int      @default(0)
+  story_enabled      Boolean  @default(true)
+  post_enabled       Boolean  @default(true)
+  reel_enabled       Boolean  @default(true)
+  connected          Boolean  @default(true)
+  active             Boolean  @default(true)
+  last_saved_content String   @default("0")
+  posts              Post[]
+  stories            Story[]
+  reels              Reel[]
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId             String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+}
+
+model Member {
+  id               String            @id @unique @default(cuid())
+  pk               String            @unique
+  full_name        String
+  username         String            @unique
+  followers        Int
+  verified         Boolean           @default(false)
+  profile_pic_url  String
+  posts            Post[]
+  stories          Story[]
+  reels            Reel[]
+  userInstaMembers UserInstaMember[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @default(now()) @updatedAt
+}
+
+model TikTokMember {
+  id                String             @id @unique @default(cuid())
+  t_id              String             @unique
+  uniqueId          String             @unique
+  followerCount     Int
+  followingCount    Int
+  heartCount        Int
+  videoCount        Int
+  profileUrl        String
+  nickname          String             @default("")
+  bio               String
+  videos            Video[]
+  userTikTokMembers UserTikTokMember[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+}
+
+model UserInstaMember {
+  id        String   @id @unique @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  memberId  String
+  paused    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId, memberId])
+}
+
+model UserTikTokMember {
+  id             String       @id @unique @default(cuid())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId         String
+  tikTokMember   TikTokMember @relation(fields: [tikTokMemberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tikTokMemberId String
+  paused         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now()) @updatedAt
+
+  @@unique([userId, tikTokMemberId])
+  @@index([userId, tikTokMemberId])
+}
+
+model Post {
+  id                    String      @id @unique @default(cuid())
+  link                  String
+  pk                    String
+  caption               String?
+  mentions              String[]
+  owner_pk              String
+  owner_full_name       String
+  owner_username        String
+  owner_followers       Int
+  owner_verified        Boolean
+  owner_profile_pic_url String
+  usage_right           UsageRight  @default(DEFAULT)
+  instagram             Instagram   @relation(fields: [instagramId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  instagramId           String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId                String
+  member                Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  memberId              String
+  igContents            IgContent[]
+  collection            Collection? @relation(fields: [collectionId], references: [id])
+  collectionId          String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @default(now()) @updatedAt
+}
+
+model Story {
+  id                    String      @id @unique @default(cuid())
+  latest_reel_media     Int
+  mentions              String[]
+  owner_pk              String
+  owner_full_name       String
+  owner_username        String
+  owner_followers       Int
+  owner_verified        Boolean
+  owner_profile_pic_url String
+  usage_right           UsageRight  @default(DEFAULT)
+  instagram             Instagram   @relation(fields: [instagramId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  instagramId           String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId                String
+  member                Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  memberId              String
+  igContents            IgContent[]
+  collection            Collection? @relation(fields: [collectionId], references: [id])
+  collectionId          String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @default(now()) @updatedAt
+}
+
+model Reel {
+  id                    String      @id @unique @default(cuid())
+  pk                    String
+  link                  String
+  usage_right           UsageRight  @default(DEFAULT)
+  caption               String?
+  mentions              String[]
+  owner_pk              String
+  owner_full_name       String
+  owner_username        String
+  owner_followers       Int
+  owner_verified        Boolean
+  owner_profile_pic_url String
+  instagram             Instagram   @relation(fields: [instagramId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  instagramId           String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId                String
+  member                Member      @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  memberId              String
+  igContent             IgContent?
+  collection            Collection? @relation(fields: [collectionId], references: [id])
+  collectionId          String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @default(now()) @updatedAt
+}
+
+model IgContent {
+  id          String   @id @unique @default(cuid())
+  media_id    String   @unique
+  url         String
+  width       Int
+  height      Int
+  taken_at    Int
+  is_video    Boolean
+  has_audio   Boolean  @default(false)
+  duration    Float?
+  display_url String?
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  postId      String?
+  story       Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  storyId     String?
+  reel        Reel?    @relation(fields: [reelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reelId      String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+model TikTok {
+  id              String   @id @unique @default(cuid())
+  t_id            String   @unique
+  uniqueId        String   @unique
+  last_saved_time String   @default("0")
+  followerCount   Int
+  followingCount  Int
+  heartCount      Int
+  videoCount      Int
+  profilePic      String
+  nickname        String   @default("")
+  bio             String
+  secUid          String
+  country_code    String
+  phone           String   @default("")
+  connected       Boolean
+  active          Boolean  @default(true)
+  browser         Json     @default("{}")
+  cookies         String[]
+  cookie          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId          String
+  videos          Video[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+}
+
+model Video {
+  id             String       @id @unique @default(cuid())
+  t_id           String       @unique
+  link           String
+  width          Int
+  height         Int
+  duration       Float        @default(0)
+  caption        String       @default("")
+  timestamp      Int
+  usage_right    UsageRight   @default(DEFAULT)
+  display_url    String
+  url            String
+  tiktok         TikTok       @relation(fields: [tikTokId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tikTokId       String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId         String
+  tikTokMember   TikTokMember @relation(fields: [tikTokMemberId], references: [id])
+  tikTokMemberId String
+  collection     Collection?  @relation(fields: [collectionId], references: [id])
+  collectionId   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now()) @updatedAt
+}
+
+model Collection {
+  id        String   @id @unique @default(cuid())
+  name      String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String
+  posts     Post[]
+  stories   Story[]
+  reels     Reel[]
+  videos    Video[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, name])
+}
+
+model Tag {
+  id        String   @id @unique @default(cuid())
+  lable     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model PersonalAccessToken {
+  id            String   @id @unique @default(cuid())
+  access_token  String   @unique
+  refresh_token String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+}
+
+model ResetPasswordToken {
+  id        String   @id @unique @default(cuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+//create pricing table
+model Pricing {
+  id                String   @id @unique @default(cuid())
+  stripe_id         String   @unique
+  name              String   @unique
+  prod_id           String   @unique
+  interval          String
+  price             Float
+  active            Boolean
+  currency          String   @default("usd")
+  lookup_key        String   @unique
+  dictiption        String
+  metadata          Json
+  url               String
+  number_of_socials String
+  users             User[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+}
+
+enum Provider {
+  LOCAL
+  GOOGLE
+}
+
+enum UsageRight {
+  PENDING
+  APPROVED
+  REJECTED
+  DEFAULT
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum CountryCode {
+  Ethiopia
+  America
+  Polland
+}

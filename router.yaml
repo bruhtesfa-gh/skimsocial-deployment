@@ -1,0 +1,2 @@
+include_subgraph_errors:
+  all: false # Propagate errors from all subgraphs

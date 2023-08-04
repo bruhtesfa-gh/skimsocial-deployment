@@ -1,0 +1,6 @@
+services:
+  - name: my-service
+    buildCommand: npm run build
+    startCommand: npm run start
+    # cacheDirectories:
+    #   - node_modules
